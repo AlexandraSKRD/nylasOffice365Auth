@@ -1,0 +1,9 @@
+venv/
+static/*
+node_modules
+.idea/
+*.pyo
+*.pyc
+*.sqlite3
+package-lock.json
+celerybeat-schedule
