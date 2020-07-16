@@ -71,24 +71,24 @@ def callback(request):
     # Get the state saved in session
     expected_state = request.session.pop('auth_state', '')
     # Make the token request
+
     token = get_token_from_code(request.get_full_path(), expected_state)
     # Get the user's profile
     user = get_user(token)
     api_client = APIClient(app_id="57j65z6aezdxuocajwwegvkyx", app_secret="du2z08iomhm6remzvzyhk8bz9")
     response_body = {
         "client_id": api_client.app_id,
-        "name": "alexandra",
-        "email_address": 'alexandraliftlytics@outlook.com',
+        "name": user['givenName'],
+        "email_address": user['mail'],
         "provider": "office365",
         "settings": {
             "microsoft_client_id": settings['app_id'],
             "microsoft_client_secret": settings['app_secret'],
             "microsoft_refresh_token": token['refresh_token'],
-            "redirect_uri": "http://localhost:8000/callback",
+            "redirect_uri": settings['redirect'],
         },
         "scopes": "email.read_only,calendar.read_only,contacts.read_only"
     }
-    print()
     nylas_authorize_resp = requests.post(
         "https://api.nylas.com/connect/authorize", json=response_body
     )
