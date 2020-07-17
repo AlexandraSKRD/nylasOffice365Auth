@@ -30,7 +30,7 @@ def get_sign_in_url():
                              scope=settings['scopes'],
                              redirect_uri=settings['redirect'])
 
-    sign_in_url, state = aad_auth.authorization_url(authorize_url, prompt='login')
+    sign_in_url, state = aad_auth.authorization_url(authorize_url)
 
     return sign_in_url, state
 

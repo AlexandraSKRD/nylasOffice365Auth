@@ -49,7 +49,6 @@ def sign_in(request):
     sign_in_url, state = get_sign_in_url()
     # Save the expected state so we can validate in the callback
     request.session['auth_state'] = state
-    print(sign_in_url)
     # Redirect to the Azure sign-in page
     return HttpResponseRedirect(sign_in_url)
 
@@ -75,6 +74,7 @@ def callback(request):
     token = get_token_from_code(request.get_full_path(), expected_state)
     # Get the user's profile
     user = get_user(token)
+    # #Get nylas code
     api_client = APIClient(app_id="57j65z6aezdxuocajwwegvkyx", app_secret="du2z08iomhm6remzvzyhk8bz9")
     response_body = {
         "client_id": api_client.app_id,
@@ -87,12 +87,33 @@ def callback(request):
             "microsoft_refresh_token": token['refresh_token'],
             "redirect_uri": settings['redirect'],
         },
-        "scopes": "email.read_only,calendar.read_only,contacts.read_only"
+        "scopes": "email.read_only,calendar"
     }
     nylas_authorize_resp = requests.post(
         "https://api.nylas.com/connect/authorize", json=response_body
     )
-    print(nylas_authorize_resp.json())
+
+    nylas_code = nylas_authorize_resp.json()["code"]
+
+    # Get nylas access_token
+
+    nylas_token_data = {
+        "client_id": api_client.app_id,
+        "client_secret": api_client.app_secret,
+        "code": nylas_code,
+    }
+
+    nylas_token_resp = requests.post(
+        "https://api.nylas.com/connect/token", json=nylas_token_data
+    )
+
+    if not nylas_token_resp.ok:
+        message = nylas_token_resp.json()["message"]
+        return requests.Response('Bad Request')
+
+    nylas_access_token = nylas_token_resp.json()["access_token"]
+
+    print(nylas_access_token)
 
     # Save token and user
     store_token(request, token)
